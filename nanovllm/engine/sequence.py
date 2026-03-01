@@ -4,14 +4,15 @@ from itertools import count
 
 from nanovllm.sampling_params import SamplingParams
 
-
+# 辅助类，表示一个请求的状态
 class SequenceStatus(Enum):
     WAITING = auto()
     RUNNING = auto()
     FINISHED = auto()
 
-
+# 该类的对象包含了一个请求的完整信息
 class Sequence:
+    # 两个全类共享变量，block_size 是一个块的大小，counter 是一个计数器，用于生成唯一的 seq_id
     block_size = 256
     counter = count()
 
@@ -38,6 +39,7 @@ class Sequence:
     def is_finished(self):
         return self.status == SequenceStatus.FINISHED
 
+    # 已经生成的token数 = 当前token数 - prompt token数
     @property
     def num_completion_tokens(self):
         return self.num_tokens - self.num_prompt_tokens
@@ -71,6 +73,7 @@ class Sequence:
         self.last_token = token_id
         self.num_tokens += 1
 
+    # 下面两个方法用于 pickle 模块进行 loads 和 dumps，目的是让对象能在多进程之间传输
     def __getstate__(self):
         return (self.num_tokens, self.num_prompt_tokens, self.num_cached_tokens, self.block_table,
                 self.token_ids if self.num_completion_tokens == 0 else self.last_token)
